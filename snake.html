@@ -319,17 +319,23 @@ function onEat(){
 }
 
 /* ── GAME LOGIC STEP ── */
+let stepping=false; // guard against re-entrant calls
 function step(){
+  if(stepping)return; stepping=true;
   dir={...nextDir};
   const head={x:(snake[0].x+dir.x+COLS)%COLS,y:(snake[0].y+dir.y+ROWS)%ROWS};
-  if(snake.some(s=>s.x===head.x&&s.y===head.y)){gameOver();return;}
+  const eating=(head.x===food.x&&head.y===food.y);
+  // Collision: exclude the tail segment when NOT eating (it will move away)
+  const body=eating?snake:snake.slice(0,-1);
+  if(body.some(s=>s.x===head.x&&s.y===head.y)){stepping=false;gameOver();return;}
   trailFade.push({x:snake[snake.length-1].x,y:snake[snake.length-1].y,life:0.85});
   snake.unshift(head);
-  if(head.x===food.x&&head.y===food.y){
-    onEat(); // do NOT pop — snake grows
+  if(eating){
+    onEat(); // tail stays — snake grows
   } else {
     snake.pop();
   }
+  stepping=false;
 }
 
 /* ── START / GAME OVER / PAUSE ── */
